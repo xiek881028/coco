@@ -9,7 +9,7 @@
 	<body>
 		<div class="title">
 			<div class="btnBox">
-				<i class="fa fa-times close" onClick='close()'></i>
+				<i class="fa fa-times close" onClick='appClose()'></i>
 				<i class="fa fa-window-maximize" onClick='maxsize()'></i>
 				<i class="fa fa-window-minimize" onClick='minsize()'></i>
 			</div>
@@ -23,8 +23,8 @@
 		</div>
 	</body>
 	<script>
-		const remote = require('electron').remote
-		close = function(){
+		const remote = require('electron').remote;
+		appClose = function(){
 			remote.app.quit()
 		};
 		maxsize = function(){

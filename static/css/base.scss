@@ -1,3 +1,6 @@
+/*@import 'config';*/
+/*@import 'global';*/
+
 body{
 	background:#1e1e1e;
 	color:#fff;
@@ -38,6 +41,7 @@ body>.title .btnBox i{
 	color:rgba(255,2552,255,.5);
 	padding:8px 5px 0;
 	height:100%;
+	box-sizing:border-box;
 	-webkit-app-region: no-drag;
 }
 
