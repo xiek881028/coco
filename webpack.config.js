@@ -19,7 +19,7 @@ let webpackExtractTextPlugin = require('extract-text-webpack-plugin');
 let htmlWebpackPlugin = require('html-webpack-plugin');
 let webpackConfig = {
 	entry: {
-		common: path.join(basePath, 'static', 'js', 'demo'),
+		demo: path.join(basePath, 'static', 'js', 'demo'),
 	},
 
 	output: {
@@ -117,13 +117,19 @@ let webpackConfig = {
 		new webpack.LoaderOptionsPlugin({
 			minimize: true,
 		}),
-		new webpackExtractTextPlugin(path.join('..', 'css', `[name]${min}.css`)),
-		new htmlWebpackPlugin({
-			template: path.join(basePath, './view', 'demo.pug'),
-			filename: path.join(basePath, '/view', 'demo.html')
-		}),
+		new webpackExtractTextPlugin(path.join('..', 'css', `[name]${min}.css`))
 	],
 };
+
+Object.keys(webpackConfig.entry).map(function(item){
+		webpackConfig.plugins.push(
+			new htmlWebpackPlugin({
+				template: path.join(basePath, 'view', `${item}.pug`),
+				filename: path.join('..', 'view', `${item}.html`),
+				hash: true
+			})
+		);
+});
 
 if(prod) {
 	webpackConfig.plugins.push(new webpack.optimize.UglifyJsPlugin({
