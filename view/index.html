@@ -4,14 +4,19 @@
 		<meta charset="UTF-8">
 		<title>Hello World!</title>
 		<link href="../static/css/base.css" rel="stylesheet" type="text/css">
+		<link rel="stylesheet" href="../lib/font-awesome-4.7.0/css/font-awesome.min.css">
 	</head>
 	<body>
 		<div class="title">
-			<a href="javascript:;" onClick='aaa()'>关闭</a>
+			<div class="btnBox">
+				<i class="fa fa-times close" onClick='close()'></i>
+				<i class="fa fa-window-maximize" onClick='maxsize()'></i>
+				<i class="fa fa-window-minimize" onClick='minsize()'></i>
+			</div>
+			<h1>demo</h1>
 		</div>
 		<div class="content">
 			<h1>Hello World!</h1>
-			<p>demo</p>
 			<!--We are using node <script>document.write(process.versions.node)</script>,
 			Chrome <script>document.write(process.versions.chrome)</script>,
 			and Electron <script>document.write(process.versions.electron)</script>.-->
@@ -19,8 +24,16 @@
 	</body>
 	<script>
 		const remote = require('electron').remote
-		aaa = function(){
+		close = function(){
 			remote.app.quit()
+		};
+		maxsize = function(){
+			let win = remote.BrowserWindow.getFocusedWindow();
+			win[win.isMaximized()?'unmaximize':'maximize']();
+		};
+		minsize = function(){
+			let win = remote.BrowserWindow.getFocusedWindow();
+			win.minimize();
 		};
 	</script>
 </html>
