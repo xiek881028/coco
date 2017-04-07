@@ -16,6 +16,7 @@ const min = prod ? '.min' : '';
 
 let webpack = require('webpack');
 let webpackExtractTextPlugin = require('extract-text-webpack-plugin');
+let htmlWebpackPlugin = require('html-webpack-plugin');
 let webpackConfig = {
 	entry: {
 		common: path.join(basePath, 'static', 'js', 'demo'),
@@ -117,6 +118,10 @@ let webpackConfig = {
 			minimize: true,
 		}),
 		new webpackExtractTextPlugin(path.join('..', 'css', `[name]${min}.css`)),
+		new htmlWebpackPlugin({
+			template: path.join(basePath, './view', 'demo.pug'),
+			filename: path.join(basePath, '/view', 'demo.html')
+		}),
 	],
 };
 
