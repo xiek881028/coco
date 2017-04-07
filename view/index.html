@@ -6,12 +6,16 @@
 		<link href="../static/css/base.css" rel="stylesheet" type="text/css">
 	</head>
 	<body>
-		<h1>Hello World!</h1>
-		<!--We are using node <script>document.write(process.versions.node)</script>,
-		Chrome <script>document.write(process.versions.chrome)</script>,
-		and Electron <script>document.write(process.versions.electron)</script>.-->
-		卧槽，你终于跑起来了
-		<a href="javascript:;" onClick='aaa()'>关闭</a>
+		<div class="title">
+			<a href="javascript:;" onClick='aaa()'>关闭</a>
+		</div>
+		<div class="content">
+			<h1>Hello World!</h1>
+			<p>demo</p>
+			<!--We are using node <script>document.write(process.versions.node)</script>,
+			Chrome <script>document.write(process.versions.chrome)</script>,
+			and Electron <script>document.write(process.versions.electron)</script>.-->
+		</div>
 	</body>
 	<script>
 		const remote = require('electron').remote

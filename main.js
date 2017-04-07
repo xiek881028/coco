@@ -12,7 +12,7 @@ function createWindow () {
 		width: 400,
 		height: 600,
 		frame: false,
-		transparent: true
+		// transparent: true
 })
 	// win.loadURL('http://bagazhu.com')
 
