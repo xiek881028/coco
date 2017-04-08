@@ -19,7 +19,7 @@ let webpackExtractTextPlugin = require('extract-text-webpack-plugin');
 let htmlWebpackPlugin = require('html-webpack-plugin');
 let webpackConfig = {
 	entry: {
-		demo: path.join(basePath, 'static', 'js', 'demo'),
+		common: path.join(basePath, 'src', 'js', 'common'),
 	},
 
 	output: {
@@ -111,7 +111,7 @@ let webpackConfig = {
 	plugins: [
 		new webpack.DefinePlugin({
 			'process.env': {
-				NODE_ENV: `'${env}'`,
+				NODE_ENV: `${env}`,
 			},
 		}),
 		new webpack.LoaderOptionsPlugin({
@@ -124,9 +124,10 @@ let webpackConfig = {
 Object.keys(webpackConfig.entry).map(function(item){
 		webpackConfig.plugins.push(
 			new htmlWebpackPlugin({
-				template: path.join(basePath, 'view', `${item}.pug`),
-				filename: path.join('..', 'view', `${item}.html`),
-				hash: true
+				template: path.join(basePath, 'view', item=='common'?'index.pug':`${item}.pug`),
+				filename: path.join('..', 'view', item=='common'?'index.html':`${item}.html`),
+				hash: true,
+				title: `${min}`
 			})
 		);
 });
