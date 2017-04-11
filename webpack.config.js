@@ -20,6 +20,7 @@ let htmlWebpackPlugin = require('html-webpack-plugin');
 let webpackConfig = {
 	entry: {
 		common: path.join(basePath, 'src', 'js', 'common'),
+		video: path.join(basePath, 'src', 'js', 'video'),
 	},
 
 	output: {
@@ -117,7 +118,7 @@ let webpackConfig = {
 		new webpack.LoaderOptionsPlugin({
 			minimize: true,
 		}),
-		new webpackExtractTextPlugin(path.join('..', 'css', `[name]${min}.css`))
+		new webpackExtractTextPlugin(path.join('..', 'css', `[name]${min}.css`)),
 	],
 };
 
@@ -127,7 +128,8 @@ Object.keys(webpackConfig.entry).map(function(item){
 				template: path.join(basePath, 'view', item=='common'?'index.pug':`${item}.pug`),
 				filename: path.join('..', 'view', item=='common'?'index.html':`${item}.html`),
 				hash: true,
-				title: `${min}`
+				title: `${min}`,
+				chunks:[item],
 			})
 		);
 });

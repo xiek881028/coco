@@ -11,13 +11,10 @@ div(class="window")
 </template>
 
 <script>
-export default {
+const remote = nodeRequire('electron').remote;
+const win = remote.getCurrentWindow();
 
-	data (){
-		return {
-			remote: nodeRequire('electron').remote
-		}
-	},
+export default {
 
 	props: {
 		title: String
@@ -25,14 +22,12 @@ export default {
 
 	methods :{
 		appClose(){
-			this.remote.app.quit()
+			remote.app.quit()
 		},
 		maxsize(){
-			let win = this.remote.BrowserWindow.getFocusedWindow();
 			win[win.isMaximized()?'unmaximize':'maximize']();
 		},
 		minsize(){
-			let win = this.remote.BrowserWindow.getFocusedWindow();
 			win.minimize();
 		},
 	},
@@ -100,6 +95,7 @@ export default {
 		overflow:hidden;
 		height:25px;
 		line-height:25px;
+		font-weight:normal;
 	}
 }
 

@@ -8,7 +8,8 @@
     "email": "285985285@qq.com"
   },
   "scripts": {
-    "start": "webpack --colors --debug --devtool sourcemap --output-pathinfo --progress --watch"
+    "start": "webpack --colors --debug --devtool sourcemap --output-pathinfo --progress --watch",
+    "el": "electron ."
   },
   "dependencies": {},
   "devDependencies": {
@@ -32,6 +33,7 @@
     "vue": "^2.2.4",
     "vue-loader": "^11.1.4",
     "vue-template-compiler": "^2.2.4",
-    "webpack": "^2.2.1"
+    "webpack": "^2.2.1",
+    "electron": "^1.6.2"
   }
 }
