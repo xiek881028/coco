@@ -1,7 +1,8 @@
 <template lang="pug">
 div(class="demo")
 	p {{cpu}}
-	iframe(src="./video.html")
+	iframe(src="./video.html" ref="iframe")
+	button(v-on:click="closeIframe") 关闭
 </template>
 
 <script>
@@ -20,13 +21,15 @@ export default {
 		}
 	},
 
-	props: {
-	},
-
 	mounted: function(){
 	},
 
 	methods :{
+		closeIframe: function(){
+			let iframe = this.$refs.iframe;
+			console.log(iframe.parentNode);
+			iframe.parentNode.removeChild(iframe);
+		},
 	},
 
 };
