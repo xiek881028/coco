@@ -9,8 +9,8 @@ let win
 function createWindow () {
   // 创建浏览器窗口。
 	win = new BrowserWindow({
-		width: 700,
-		height: 600,
+		minWidth: 900,
+		minHeight: 600,
 		frame: false,
 		title: "八嘎猪",
 		// transparent: true
