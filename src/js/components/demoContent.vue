@@ -1,35 +1,39 @@
 <template lang="pug">
 div(class="demo")
-	p {{cpu}}
-	iframe(src="./video.html" ref="iframe")
-	button(v-on:click="closeIframe") 关闭
 </template>
 
 <script>
-import getVideo from './video.vue';
-
+// import getVideo from './video.vue';
+const remote = nodeRequire('electron').remote;
+const net = nodeRequire('net');
 const os = nodeRequire('os');
+
 export default {
 
-	components: {
-		getVideo,
-	},
+	// components: {
+	// 	getVideo,
+	// },
 
 	data: ()=>{
 		return {
-			cpu: os.cpus()
 		}
 	},
 
 	mounted: function(){
+		let server = net.createServer((req,res) => {
+			console.log(req.localAddress);
+			console.log(os.networkInterfaces());
+		}).on('error', (err) => {
+			throw err;
+		});
+
+		// grab a random port.
+		server.listen(() => {
+			console.log('opened server on', server.address());
+		});
 	},
 
 	methods :{
-		closeIframe: function(){
-			let iframe = this.$refs.iframe;
-			console.log(iframe.parentNode);
-			iframe.parentNode.removeChild(iframe);
-		},
 	},
 
 };
@@ -37,9 +41,5 @@ export default {
 
 <style lang="scss" scoped>
 @import '../../css/config';
-
-iframe{
-	border:0;
-}
 
 </style>
