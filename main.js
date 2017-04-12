@@ -11,6 +11,8 @@ function createWindow () {
 	win = new BrowserWindow({
 		minWidth: 900,
 		minHeight: 600,
+		width: 900,
+		height: 600,
 		frame: false,
 		title: "八嘎猪",
 		// transparent: true
