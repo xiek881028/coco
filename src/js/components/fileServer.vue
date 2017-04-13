@@ -8,14 +8,8 @@ div(class="fileBox")
 					span(class="gps") 定位文件
 				div(class="img" ref="qrcode")
 					img(v-bind:src="item.url")
-				div(class="info title")
-					div(class="name") 文件名：
-					div(class="path") 路径：
-					div(class="size") 文件大小：
 				div(class="info")
 					div(class="name" v-bind:title="item.name") {{item.name}}
-					div(class="path" v-bind:title="item.path") {{item.path}}
-					div(class="size") {{item.size}}
 	div(class="upload")
 		span(ref="dropBox" v-bind:class="{hover:isHover}") 请将文件拖曳到此区域
 </template>
@@ -96,7 +90,6 @@ export default {
 					fs.stat(file[item].path,(err, stats)=>{
 						if(!stats.isDirectory()){
 							file[item].notDir = false;
-							file[item]._size = this.mathSize(file[item].size);
 							console.log(file[item]._size);
 							qrCode.toDataURL(file[item].path, {
 								errorCorrectionLevel:'M',
@@ -108,7 +101,6 @@ export default {
 							}, (err, url)=>{
 								file[item].url = url;
 								this.fileList.push(file[item]);
-								console.log(this.fileList);
 							});
 						};
 					});
@@ -205,7 +197,7 @@ export default {
 }
 
 .fileBox ul li>.box{
-	padding:0 12px;
+	padding:0 22px;
 	height:100%;
 }
 
@@ -218,7 +210,7 @@ export default {
 	float:right;
 	width:128px;
 	height:128px;
-	margin:11px 10px 0;
+	margin:11px 30px 0;
 	background:#fff;
 }
 
@@ -261,32 +253,14 @@ export default {
 	overflow:hidden;
 }
 
-.fileBox ul li .info.title{
-	float:left;
-	width:100px;
-}
-
 .fileBox ul li .info .name{
-	margin-top:15px;
+	margin-top:28px;
 	font-size:24px;
-	line-height:28px;
+	line-height:32px;
 	word-break:break-all;
-	height:56px;
+	height:96px;
 	overflow:hidden;
 	cursor:default;
-}
-
-.fileBox ul li .info .path,
-.fileBox ul li .info .size{
-	line-height:20px;
-	height:40px;
-	overflow:hidden;
-	margin-top:6px;
-	color:#b3b3b3;
-}
-
-.fileBox ul li .info .size{
-	height:20px;
 }
 
 </style>
