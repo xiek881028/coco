@@ -1,13 +1,21 @@
 <template lang="pug">
 div(class="fileBox")
 	ul(class="list")
-		li(v-for="item in fileList")
-			div(class="img")
-			div(class="opt")
-			div(class="info")
-				div {{item.name}}
-				div {{item.path}}
-				div {{item.size}}
+		li(v-for="item in fileList" v-bind:class="{hasErr:item.notDir}")
+			div(class="box")
+				div(class="opt")
+					span(class="del") 删除
+					span(class="gps") 定位文件
+				div(class="img" ref="qrcode")
+					img(v-bind:src="item.url")
+				div(class="info title")
+					div(class="name") 文件名：
+					div(class="path") 路径：
+					div(class="size") 文件大小：
+				div(class="info")
+					div(class="name" v-bind:title="item.name") {{item.name}}
+					div(class="path" v-bind:title="item.path") {{item.path}}
+					div(class="size") {{item.size}}
 	div(class="upload")
 		span(ref="dropBox" v-bind:class="{hover:isHover}") 请将文件拖曳到此区域
 </template>
@@ -18,6 +26,7 @@ const remote = nodeRequire('electron').remote;
 const net = nodeRequire('http');
 const os = nodeRequire('os');
 const fs = nodeRequire('fs');
+const qrCode = nodeRequire('qrcode');
 const network = os.networkInterfaces();
 
 export default {
@@ -35,11 +44,10 @@ export default {
 	},
 
 	mounted: function(){
-		let _this = this;
 		//获取内网地址
-		Object.keys(network).map(function(item){
+		Object.keys(network).map((item)=>{
 			for(let i=0,max=network[item].length; i<max; i++){
-				/^(192)/.test(network[item][i].address) && network[item][i].family == 'IPv4' ? _this.ip = network[item][i].address:'';
+				/^(192)/.test(network[item][i].address) && network[item][i].family == 'IPv4' ? this.ip = network[item][i].address:'';
 			};
 		});
 
@@ -79,13 +87,31 @@ export default {
 		};
 		//拖入后释放
 		this.$refs.dropBox.addEventListener('drop',(e)=>{
-			let file = e.dataTransfer.files;
+			let file = e.dataTransfer.files,
+				fileArr = [];
 			e.preventDefault();
 			this.isHover = false;
 			if(file.length){
 				Object.keys(file).map((item)=>{
-					this.fileList.push(file[item]);
-					console.log(file[item]);
+					fs.stat(file[item].path,(err, stats)=>{
+						if(!stats.isDirectory()){
+							file[item].notDir = false;
+							file[item]._size = this.mathSize(file[item].size);
+							console.log(file[item]._size);
+							qrCode.toDataURL(file[item].path, {
+								errorCorrectionLevel:'M',
+								margin:1,
+								scale:4,
+								color:{
+									dark: '000000ff',
+								},
+							}, (err, url)=>{
+								file[item].url = url;
+								this.fileList.push(file[item]);
+								console.log(this.fileList);
+							});
+						};
+					});
 				});
 			};
 		});
@@ -100,8 +126,18 @@ export default {
 	},
 
 	methods :{
-		mathSize: function(){
-			console.log(1);
+		mathSize: function(size){
+			let carry = size/1024,
+				capacity = ['byte',''],
+				_size;
+			if(carry>1024){
+				_size = this.mathSize(carry);
+			}else if(carry < 1){
+				_size = size;
+			}else{
+				_size = (Math.floor(carry*100)/100).toFixed(2);
+			};
+			return _size;
 		},
 	},
 
@@ -157,21 +193,100 @@ export default {
 	bottom:180px;
 	margin:0;
 	padding:0;
+	overflow-y:auto;
 }
 
 .fileBox ul li{
 	list-style-type:none;
 	margin:0 20px;
+	height:150px;
 	overflow:hidden;
 	border-bottom:1px solid #a3a3a3;
+}
+
+.fileBox ul li>.box{
+	padding:0 12px;
+	height:100%;
+}
+
+.fileBox ul li:last-child{
+	border-bottom:none;
 }
 
 .fileBox ul li .img{
 	display:block;
 	float:right;
-	width:130px;
-	height:130px;
-	margin:10px;
+	width:128px;
+	height:128px;
+	margin:11px 10px 0;
+	background:#fff;
+}
+
+.fileBox ul li .img img{
+	width:100%;
+	height:100%;
+	display:block;
+}
+
+.fileBox ul li .opt{
+	display:block;
+	float:right;
+	width:80px;
+	margin-top:28px;
+}
+
+.fileBox ul li .opt span{
+	line-height:16px;
+	height:16px;
+	color:#fff;
+	text-align:center;
+	display:block;
+	padding:3px 5px;
+	width:60px;
+	margin:0 auto;
+	margin-top:18px;
+	border-radius:2px;
+	cursor:pointer;
+}
+
+.fileBox ul li .opt .del{
+	background-color:#d9534f;
+}
+
+.fileBox ul li .opt .gps{
+	background-color:#337ab7;
+}
+
+.fileBox ul li .info{
+	overflow:hidden;
+}
+
+.fileBox ul li .info.title{
+	float:left;
+	width:100px;
+}
+
+.fileBox ul li .info .name{
+	margin-top:15px;
+	font-size:24px;
+	line-height:28px;
+	word-break:break-all;
+	height:56px;
+	overflow:hidden;
+	cursor:default;
+}
+
+.fileBox ul li .info .path,
+.fileBox ul li .info .size{
+	line-height:20px;
+	height:40px;
+	overflow:hidden;
+	margin-top:6px;
+	color:#b3b3b3;
+}
+
+.fileBox ul li .info .size{
+	height:20px;
 }
 
 </style>
