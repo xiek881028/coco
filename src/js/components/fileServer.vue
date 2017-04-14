@@ -3,23 +3,25 @@ div(class="fileBox")
 	ul(class="list")
 		li(v-for="item in fileList" v-bind:class="{hasErr:item.notDir}")
 			div(class="box")
-				div(class="opt")
-					span(class="del") 删除
-					span(class="gps") 定位文件
 				div(class="img" ref="qrcode")
 					img(v-bind:src="item.url")
 				div(class="info")
 					div(class="name" v-bind:title="item.name") {{item.name}}
+				div(class="opt")
+					span(class="del" v-on:click="del(item)") 删除
+					span(class="gps" v-on:click="openFile(item.path)") 定位文件
 	div(class="upload")
 		span(ref="dropBox" v-bind:class="{hover:isHover}") 请将文件拖曳到此区域
 </template>
 
 <script>
 // import getVideo from './video.vue';
-const remote = nodeRequire('electron').remote;
+const {shell} = nodeRequire('electron').remote;
 const net = nodeRequire('http');
 const os = nodeRequire('os');
 const fs = nodeRequire('fs');
+const url = nodeRequire('url');
+const querystring = nodeRequire('querystring');
 const qrCode = nodeRequire('qrcode');
 const network = os.networkInterfaces();
 
@@ -34,6 +36,7 @@ export default {
 			ip : String,
 			isHover: false,
 			fileList: [],
+			id: 0,
 		}
 	},
 
@@ -47,17 +50,31 @@ export default {
 
 		//访问服务后的业务逻辑
 		let server = net.createServer((req,res) => {
-			let stream = fs.createReadStream('networkFile' + req.url);
-			stream.on("error",function(){
+			let queryId = querystring.parse(url.parse(req.url).query).id,
+				idJson;
+			for(let i=0,max=this.fileList.length; i<max; i++){
+				if(this.fileList[i].id == queryId){
+					idJson = this.fileList[i];
+					break;
+				};
+			};
+			if(idJson){
+				let stream = fs.createReadStream(idJson.path);
+				stream.on("error",function(){
+					res.writeHeader(404);
+					res.end();
+				});
+				//写入头部type为流文件 确定支持chrome、firefox、IE
+				res.writeHeader(200,{
+					'Content-Type': 'application/force-download',
+					'Content-Disposition': 'attachment; filename='+ querystring.escape(idJson.name) + ';filename*=utf-8\'\'' + querystring.escape(idJson.name),
+				});
+				//返回文件内容
+				stream.pipe(res);
+			}else{
 				res.writeHeader(404);
 				res.end();
-			});
-			//写入头部type为流文件
-			res.writeHeader(200,{
-				'Content-Type': 'application/octet-stream',
-			});
-			//返回文件内容
-			stream.pipe(res);
+			};
 		}).on('error', (err) => {
 			throw err;
 		});
@@ -87,11 +104,15 @@ export default {
 			this.isHover = false;
 			if(file.length){
 				Object.keys(file).map((item)=>{
+					//加入id标识文件唯一
+					file[item].id = this.id;
+					this.id += 1;
 					fs.stat(file[item].path,(err, stats)=>{
+						//文件夹过滤
 						if(!stats.isDirectory()){
 							file[item].notDir = false;
-							console.log(file[item]._size);
-							qrCode.toDataURL(file[item].path, {
+							//生成二维码
+							qrCode.toDataURL('http://' + this.ip + ':' + server.address().port + '?id=' + file[item].id, {
 								errorCorrectionLevel:'M',
 								margin:1,
 								scale:4,
@@ -100,7 +121,8 @@ export default {
 								},
 							}, (err, url)=>{
 								file[item].url = url;
-								this.fileList.push(file[item]);
+								this.fileList.unshift(file[item]);
+								console.log(this.fileList);
 							});
 						};
 					});
@@ -130,6 +152,17 @@ export default {
 				_size = (Math.floor(carry*100)/100).toFixed(2);
 			};
 			return _size;
+		},
+		openFile: function(path){
+			shell.showItemInFolder(path);
+		},
+		del: function(item){
+			for(let i=0,max=this.fileList.length; i<max; i++){
+				if(this.fileList[i].id == item.id){
+					this.fileList.splice(i,1);
+					break;
+				};
+			};
 		},
 	},
 
@@ -183,35 +216,27 @@ export default {
 	left:0;
 	right:0;
 	bottom:180px;
-	margin:0;
-	padding:0;
+	margin:0 20px 0 0;
+	padding:0 0 20px 0;
 	overflow-y:auto;
 }
 
 .fileBox ul li{
 	list-style-type:none;
-	margin:0 20px;
-	height:150px;
+	margin:20px 0 0 20px;
+	height:260px;
 	overflow:hidden;
-	border-bottom:1px solid #a3a3a3;
-}
-
-.fileBox ul li>.box{
-	padding:0 22px;
-	height:100%;
-}
-
-.fileBox ul li:last-child{
-	border-bottom:none;
+	float:left;
+	width:175px;
+	box-sizing:border-box;
+	background:#fff;
 }
 
 .fileBox ul li .img{
 	display:block;
-	float:right;
-	width:128px;
-	height:128px;
-	margin:11px 30px 0;
-	background:#fff;
+	width:175px;
+	height:175px;
+	margin:0 auto;
 }
 
 .fileBox ul li .img img{
@@ -221,22 +246,19 @@ export default {
 }
 
 .fileBox ul li .opt{
-	display:block;
-	float:right;
-	width:80px;
-	margin-top:28px;
+	text-align:center;
 }
 
 .fileBox ul li .opt span{
+	font-size:12px;
 	line-height:16px;
 	height:16px;
 	color:#fff;
 	text-align:center;
-	display:block;
-	padding:3px 5px;
-	width:60px;
-	margin:0 auto;
-	margin-top:18px;
+	display:inline-block;
+	margin:0 7px;
+	padding:2px;
+	width:55px;
 	border-radius:2px;
 	cursor:pointer;
 }
@@ -254,13 +276,14 @@ export default {
 }
 
 .fileBox ul li .info .name{
-	margin-top:28px;
-	font-size:24px;
-	line-height:32px;
+	margin:0 10px 5px;
+	font-size:18px;
+	line-height:24px;
 	word-break:break-all;
-	height:96px;
+	height:48px;
 	overflow:hidden;
 	cursor:default;
+	color:#333;
 }
 
 </style>
