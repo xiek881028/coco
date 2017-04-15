@@ -9,9 +9,12 @@
   },
   "scripts": {
     "start": "webpack --colors --debug --devtool sourcemap --output-pathinfo --progress --watch",
-    "el": "electron ."
+    "el": "electron .",
+    "build": "electron-packager . app --platform=win32 --arch=all --version=0.0.1 --out ./package --overwrite --ignore=node_modules"
   },
-  "dependencies": {},
+  "dependencies": {
+    "qrcode": "^0.8.1"
+  },
   "devDependencies": {
     "autoprefixer": "^6.7.7",
     "babel-core": "^6.24.0",
@@ -28,7 +31,6 @@
     "pug": "^2.0.0-beta11",
     "pug-code-gen": "^1.1.1",
     "pug-loader": "^2.3.0",
-    "qrcode": "^0.8.1",
     "sass-loader": "^6.0.3",
     "style-loader": "^0.14.0",
     "url-loader": "^0.5.8",

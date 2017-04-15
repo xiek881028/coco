@@ -30,6 +30,7 @@ const querystring = nodeRequire('querystring');
 const qrCode = nodeRequire('qrcode');
 const network = os.networkInterfaces();
 
+let timer;
 export default {
 
 	// components: {
@@ -173,9 +174,10 @@ export default {
 			};
 		},
 		totips: function(txt){
+			clearTimeout(timer);
 			this.showTips = true;
 			this.tipsTxt = txt;
-			setTimeout(()=>{
+			timer = setTimeout(()=>{
 				this.closeTip();
 			},3000);
 		},
