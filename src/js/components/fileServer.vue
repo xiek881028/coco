@@ -1,6 +1,6 @@
 <template lang="pug">
 div(class="fileBox")
-	ul(class="list")
+	ul(class="list" ref="ulList")
 		li(v-for="item in fileList" v-bind:class="{hasErr:item.notDir}")
 			div(class="box")
 				div(class="img" ref="qrcode")
@@ -12,6 +12,11 @@ div(class="fileBox")
 					span(class="gps" v-on:click="openFile(item.path)") 定位文件
 	div(class="upload")
 		span(ref="dropBox" v-bind:class="{hover:isHover}") 请将文件拖曳到此区域
+	div(class="toTips" v-bind:class="{toShow:showTips}")
+		div(class="closeBtn" v-on:click="closeTip") 关闭
+		div(class="contxt")
+			i(class="fa fa-times-circle")
+			| {{tipsTxt}}
 </template>
 
 <script>
@@ -37,6 +42,8 @@ export default {
 			isHover: false,
 			fileList: [],
 			id: 0,
+			showTips: false,
+			tipsTxt: '',
 		}
 	},
 
@@ -50,7 +57,7 @@ export default {
 
 		//访问服务后的业务逻辑
 		let server = net.createServer((req,res) => {
-			let queryId = querystring.parse(url.parse(req.url).query).id,
+			let queryId = req.url.replace('/',''),
 				idJson;
 			for(let i=0,max=this.fileList.length; i<max; i++){
 				if(this.fileList[i].id == queryId){
@@ -64,10 +71,10 @@ export default {
 					res.writeHeader(404);
 					res.end();
 				});
-				//写入头部type为流文件 确定支持chrome、firefox、IE
+				//写入头部type为流文件 确定支持chrome、firefox、小米3、苹果
 				res.writeHeader(200,{
-					'Content-Type': 'application/force-download',
-					'Content-Disposition': 'attachment; filename='+ querystring.escape(idJson.name) + ';filename*=utf-8\'\'' + querystring.escape(idJson.name),
+					'Content-Type': 'application/octet-stream',
+					'Content-Disposition': 'attachment; filename='+ querystring.escape(idJson.name) + (req.headers["user-agent"].indexOf('Android') != -1?'':';filename*=utf-8\'\'' + querystring.escape(idJson.name)),
 				});
 				//返回文件内容
 				stream.pipe(res);
@@ -112,7 +119,7 @@ export default {
 						if(!stats.isDirectory()){
 							file[item].notDir = false;
 							//生成二维码
-							qrCode.toDataURL('http://' + this.ip + ':' + server.address().port + '?id=' + file[item].id, {
+							qrCode.toDataURL('http://' + this.ip + ':' + server.address().port + '/' + file[item].id, {
 								errorCorrectionLevel:'M',
 								margin:1,
 								scale:4,
@@ -122,8 +129,9 @@ export default {
 							}, (err, url)=>{
 								file[item].url = url;
 								this.fileList.unshift(file[item]);
-								console.log(this.fileList);
 							});
+						}else{
+							this.totips('暂不支持文件夹传输');
 						};
 					});
 				});
@@ -164,6 +172,16 @@ export default {
 				};
 			};
 		},
+		totips: function(txt){
+			this.showTips = true;
+			this.tipsTxt = txt;
+			setTimeout(()=>{
+				this.closeTip();
+			},3000);
+		},
+		closeTip: function(){
+			this.showTips = false;
+		},
 	},
 
 };
@@ -187,6 +205,7 @@ export default {
 	right:0;
 	height:180px;
 	background:#333;
+	z-index:3;
 }
 
 .fileBox .upload span{
@@ -284,6 +303,51 @@ export default {
 	overflow:hidden;
 	cursor:default;
 	color:#333;
+}
+
+.fileBox .toTips{
+	position:fixed;
+	font-size:14px;
+	left:0;
+	right:0;
+	bottom:150px;
+	box-sizing:border-box;
+	color:#fff;
+	background:rgb(0, 122, 204);
+	height:30px;
+	line-height:30px;
+	z-index:2;
+	overflow:hidden;
+	padding:0 10px;
+	transition:all .5s;
+}
+
+.fileBox .toTips.toShow{
+	transition:all .5s;
+	bottom:180px;
+}
+
+.fileBox .toTips .contxt{
+	overflow:hidden;
+}
+
+.fileBox .toTips .contxt i{
+	font-size:16px;
+	vertical-align:middle;
+	margin-right:8px;
+}
+
+.fileBox .toTips .closeBtn{
+	float:right;
+	text-align:center;
+	padding:0 15px;
+	border:1px solid #fff;
+	height:20px;
+	line-height:18px;
+	box-sizing:border-box;
+	font-size:12px;
+	margin:5px 0 5px 20px;
+	cursor:pointer;
 }
 
 </style>
