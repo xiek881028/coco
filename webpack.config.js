@@ -1,11 +1,3 @@
-/*!
- * webpack config
- * xiewulong <xiewulong@vip.qq.com>
- * create: 2017/03/16
- * since: 0.0.1
- */
-'use strict';
-
 const path = require('path');
 const fs = require('fs');
 
