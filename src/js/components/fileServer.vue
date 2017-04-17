@@ -12,6 +12,10 @@ div(class="fileBox")
 					span(class="gps" v-on:click="openFile(item.path)") 定位文件
 	div(class="upload")
 		span(ref="dropBox" v-bind:class="{hover:isHover}") 请将文件拖曳到此区域
+		div(class="footer")
+			a(class="fa fa-user-circle" href="javascript:;" v-on:click="openUrl('http://bagazhu.com')")
+			a(class="fa fa-github" href="javascript:;" v-on:click="openUrl('https://github.com/xiek881028')")
+			| by xiek
 	div(class="toTips" v-bind:class="{toShow:showTips}")
 		div(class="closeBtn" v-on:click="closeTip") 关闭
 		div(class="contxt")
@@ -165,6 +169,9 @@ export default {
 		openFile: function(path){
 			shell.showItemInFolder(path);
 		},
+		openUrl: function(url){
+			shell.openExternal(url);
+		},
 		del: function(item){
 			for(let i=0,max=this.fileList.length; i<max; i++){
 				if(this.fileList[i].id == item.id){
@@ -205,7 +212,7 @@ export default {
 	bottom:0;
 	left:0;
 	right:0;
-	height:180px;
+	height:200px;
 	background:#333;
 	z-index:3;
 }
@@ -229,6 +236,31 @@ export default {
 .fileBox .upload span.hover{
 	color:#fff;
 	border-color:#fff;
+}
+
+.fileBox .upload .footer{
+	position:absolute;
+	bottom:0;
+	left:0;
+	right:0;
+	background:rgb(0, 122, 204);
+	height:20px;
+	line-height:20px;
+	padding:0 10px;
+}
+
+.fileBox .upload .footer a{
+	float:right;
+	color:#fff;
+	text-decoration:none;
+	font-size:14px;
+	margin-top:3px;
+	margin-right:8px;
+}
+
+.fileBox .upload .footer a.fa-github{
+	font-size:16px;
+	margin-top:2px;
 }
 
 .fileBox ul{
@@ -315,13 +347,13 @@ export default {
 	bottom:150px;
 	box-sizing:border-box;
 	color:#fff;
-	background:rgb(0, 122, 204);
 	height:30px;
 	line-height:30px;
 	z-index:2;
 	overflow:hidden;
 	padding:0 10px;
 	transition:all .5s;
+	background:#be1100;
 }
 
 .fileBox .toTips.toShow{

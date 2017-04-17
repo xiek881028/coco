@@ -14,7 +14,7 @@ function createWindow () {
 		width: 630,
 		height: 660,
 		frame: false,
-		title: "八嘎猪",
+		title: "coco",
 		// transparent: true
 	})
 	// win.loadURL('http://bagazhu.com')
