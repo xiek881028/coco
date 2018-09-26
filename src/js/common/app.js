@@ -11,7 +11,7 @@ import '@/css/_theme.less';
 import '@/css/_common.scss';
 
 import Vue from 'vue';
-import { Message } from 'iview';
+import { Message, Notice, } from 'iview';
 import pages from '../pages';
 import Window from '../pages/components/Window.vue';
 
@@ -21,9 +21,15 @@ if(process.env.NODE_ENV === 'production'){
 
 Message.config({
   duration: 2,
-  top: 30,
+  top: 45,
 });
+Notice.config({
+  duration: 6,
+  top: 45,
+});
+
 Vue.prototype.$Message = Message;
+Vue.prototype.$Notice = Notice;
 
 new Vue({
   el: '#app',

@@ -55,6 +55,7 @@ export default {
   height: 100%;
   display: flex;
   flex-direction: column;
+  color: $color-text;
   .header {
     background: $color-bg-base;
     height: 31px;

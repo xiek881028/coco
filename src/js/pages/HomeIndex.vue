@@ -7,17 +7,25 @@
   //-     .info
   //-       .name(:title="item.name") {{item.name}}
   //-     .opt
-  //-       span.del(@click="del(item)") 删除
+  //-       span.del() 删除
   //-       span.gps(@click="openFile(item.path)") 定位文件
   .tableBox
-    Collapse.collapse(v-if="fileList.length")
-      Panel(v-for="(item, index) in fileList" :hide-arrow="true")
+    Collapse.collapse(v-if="fileList.length" v-model="activeCollapse")
+      Panel.item(v-for="item in fileList" :hide-arrow="true" :class="{hasErr: item.isDir}" :name="item.idName" :key="item.id")
         .title
-          .name 文件名：{{item.name}}
           Icon.arrow(type="ios-arrow-forward")
+          ButtonGroup.btnGroup(size="small")
+            Button(ghost)
+              BaseIcon.qrcode(type="icon-erweima")
+              | 生成二维码
+            Button(ghost icon="md-link" @click.stop="copy(item.url)") 复制链接
+            Button(ghost icon="md-folder-open" @click.stop="openFile(item.path)") 定位文件
+            Button(ghost icon="md-trash" @click.stop="del(item)") 删除
         .content(slot="content")
-          span {{item.size}}
-          span {{item.lastModified}}
+          Tag.tag(color="red") {{item.isDir ? '文件夹' : '文件'}}名称：{{item.name}}
+          Tag.tag(color="orange" v-if="!item.isDir") 文件大小：{{item.size}}
+          Tag.tag(color="blue") 修改时间：{{item.lastModified}}
+          Tag.tag(color="cyan") 路径：{{item.path}}
   .upload
     .uploadBox
       .dropBox(ref="dropBox" :class="{hover:isHover}" @click="activeDrop" @drop="dropStart" @dragenter="dragHover(true)" @dragleave="dragHover(false)")
@@ -32,7 +40,7 @@
 </template>
 
 <script>
-const { shell } = nodeRequire("electron");
+const { shell, clipboard, } = nodeRequire("electron");
 const remote = nodeRequire("electron").remote;
 const win = remote.getCurrentWindow();
 const net = nodeRequire("http");
@@ -43,18 +51,26 @@ const querystring = nodeRequire("querystring");
 const qrCode = nodeRequire("qrcode");
 const network = os.networkInterfaces();
 
-import { Icon, Collapse, Panel } from "iview";
+import { Icon, Collapse, Panel, Tag, ButtonGroup, Button, } from "iview";
+import BaseIcon from './components/BaseIcon.vue';
+import dateFormat from "cainfoharbor-utils/dateFormat";
+import filesize from "filesize";
 export default {
   components: {
     Icon,
     Collapse,
     Panel,
+    Tag,
+    ButtonGroup,
+    Button,
+    BaseIcon,
   },
   data() {
     return {
       ip: "",
       isHover: false,
       fileList: [],
+      activeCollapse: [],
       id: 0,
       showTips: false,
       tipsTxt: "",
@@ -142,18 +158,26 @@ export default {
     },
     uploadFile(e, mode) {
       let files = mode == "drop" ? e.dataTransfer.files : e.target.files;
-      this.fileList = [];
-      e.preventDefault();
       this.isHover = false;
-      if (files.length) {
-        Object.keys(files).map(item => {
-          fs.stat(files[item].path, (err, stats) => {
+      e.preventDefault();
+      if(files.length > 50){
+        this.$Notice.error({
+          title: '溢出错误',
+          desc: '单次导入文件数量最多为50个',
+        });
+        return;
+      }
+      this.fileList = [];
+      setTimeout(() => {
+        if (files.length) {
+          this.fileList = Object.keys(files).map(item => {
+            let stats = fs.statSync(files[item].path);
             //加入id标识文件唯一
             files[item].id = this.id;
             this.id += 1;
             //文件夹过滤
             if (!stats.isDirectory()) {
-              files[item].notDir = false;
+              files[item].isDir = false;
               // //生成二维码
               // qrCode.toDataURL(
               //   `http://${this.ip}:${this.server.address().port}/${files[item].id}`,
@@ -169,35 +193,38 @@ export default {
               //   }
               // );
             } else {
-              files[item].notDir = true;
+              files[item].isDir = true;
             }
             let _item = files[item];
-            this.fileList.push({
-              notDir: _item.notDir,
+            return {
+              isDir: _item.isDir,
               path: _item.path,
               name: _item.name,
-              lastModified: _item.lastModified,
+              lastModified: dateFormat('yyyy-MM-dd HH:mm:ss', new Date(+_item.lastModified)),
               id: _item.id,
-              size: _item.size,
-              url: _item.url,
-            });
+              idName: `item${_item.id}`,
+              size: filesize(_item.size),
+              url: `http://${this.ip}:${this.server.address().port}/${files[item].id}`,
+            };
           });
-        });
-      }
+          this.activeCollapse = this.fileList.map(item => item.idName);
+        }
+      }, 100);
     },
-    openFile(path) {
+    openFile(path, e) {
       shell.showItemInFolder(path);
     },
-    openUrl(url) {
-      shell.openExternal(url);
-    },
-    del(item) {
+    del(item, e) {
       for (let i = 0, max = this.fileList.length; i < max; i++) {
         if (this.fileList[i].id == item.id) {
           this.fileList.splice(i, 1);
           break;
         }
       }
+    },
+    copy(url){
+      clipboard.writeText(url);
+      this.$Message.success('复制成功！');
     },
     // totips(txt) {
     //   clearTimeout(this.timer);
@@ -232,26 +259,56 @@ export default {
     overflow: auto;
     .collapse{
       border-radius: 0;
-      background-color: $primary-color;
-      border: 1px solid $primary-color;
-      .title{
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        .name{
-          max-width: 80%;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          color: $white;
+      border: none;
+      .item{
+        background-color: $primary-color;
+        &.hasErr{
+          background-color: $color-err;
         }
-        .arrow{
-          color: #fff;
-          font-size: 16px;
+        .title{
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          height: 100%;
+          .btnGroup{
+            margin-right: 16px;
+            button{
+              display: flex;
+              align-items: center;
+              padding-bottom: 1px;
+              &:hover{
+                color: $white;
+                border-color: $white;
+                background-color: mix($white, $primary-color, 40%);
+              }
+            }
+            .qrcode{
+              margin-right: 7px;
+            }
+          }
+          .arrow{
+            color: $white;
+            font-size: 16px;
+            transition: transform .2s ease-in-out;
+          }
         }
-      }
-      .ivu-collapse-content{
-        border: none;
+        &.ivu-collapse-item-active{
+          .title{
+            .arrow{
+              transform: rotate(90deg);
+            }
+          }
+        }
+        .ivu-collapse-content{
+          border-radius: 0;
+          background-color: mix($white, $black, 92%);
+        }
+        .content{
+          .tag{
+            height: auto;
+            word-break:break-all;
+          }
+        }
       }
     }
   }
@@ -273,7 +330,7 @@ export default {
         padding: 0 20px;
         height: 140px;
         line-height: 140px;
-        border: 2px dashed $white;
+        border: 2px dashed $primary-color;
         font-size: $font-size-base * 1.5;
         text-align: center;
         color: $white;
@@ -284,7 +341,7 @@ export default {
         }
         &.hover,
         &:hover {
-          border-color: $primary-color;
+          border-color: $white;
         }
         .fileInput {
           display: none;
