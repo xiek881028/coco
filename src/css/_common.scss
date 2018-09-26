@@ -1,5 +1,10 @@
+/*!
+* _common
+* create: 2017-12-1
+* since: 0.0.1
+*/
+
 @import 'config';
-@import 'global';
 
 body{
 	background:$color-bg;
@@ -11,4 +16,6 @@ body{
 	right:0;
 	font-size:14px;
 	font-family:$font-family;
+	display: flex;
+	box-sizing: border-box;
 }

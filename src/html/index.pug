@@ -1,0 +1,36 @@
+- var locals = locals || htmlWebpackPlugin.options.title
+- var author = locals.author
+- var keywords = locals.keywords
+- var description = locals.description
+- var min = locals.min
+- var cuid = locals.cuid
+- var shims = locals.shims
+
+doctype html
+html(lang="zh-cn", xml:lang="zh-cn")
+  head
+    meta(charset="utf-8")
+    meta(name="author" content=author)
+    meta(name="keywords" content=keywords)
+    meta(name="description" content=description)
+    meta(http-equiv="x-ua-compatible" content="ie=edge,chrome=1")
+    meta(name="renderer" content="webkit")
+    meta(name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no")
+    meta(name="apple-mobile-web-app-capable" content="yes")
+    meta(name="apple-touch-fullscreen" content="yes")
+    meta(name="format-detection" content="telephone=no,email=no")
+    link(rel="stylesheet" type="text/css" href=`css/_common${cuid}.css`)
+  body
+    #app(is="Window")
+      block content
+    script(type="text/javascript").
+      (function(document, undefined){
+        console.log('如果冲突在这里处理重名文件');
+        window.nodeRequire = require;
+        delete window.require;
+        delete window.exports;
+        delete window.module;
+      })(document);
+    script(type="text/javascript" src=`assets/vue/js/vue${min}.js`)
+    script(type="text/javascript" src=`assets/vue-router/js/vue-router${min}.js`)
+    script(type="text/javascript" src=`js/_common${cuid}.js`)
