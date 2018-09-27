@@ -17,7 +17,7 @@ const WebpackOptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plug
 const WebpackUglifyjsPlugin = require('uglifyjs-webpack-plugin');
 const WebpackVueLoaderPlugin = require('vue-loader/lib/plugin');
 
-const out_base_path = 'dist';
+const out_base_path = 'app';
 const in_base_path = 'src';
 const base_path = __dirname;
 // const entry_path = `${base_path}/${in_base_path}/js`;

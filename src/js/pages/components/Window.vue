@@ -59,6 +59,11 @@ export default {
   .header {
     background: $color-bg-base;
     height: 31px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 99999;
     .headBox{
       margin-top: 3px;
       display: flex;
@@ -98,8 +103,15 @@ export default {
   .content {
     display: flex;
     flex: 1;
+    margin-top: 31px;
+    margin-bottom: 21px;
   }
   .footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 99999;
     display: flex;
     align-items: center;
     justify-content: space-between;

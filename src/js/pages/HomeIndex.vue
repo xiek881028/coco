@@ -1,42 +1,40 @@
 <template lang="pug">
 .fileBox
-  //- ul.list(ref="ulList")
-  //-   li(v-for="item in fileList" :class="{hasErr:item.notDir}")
-  //-     .imgBox(ref="qrcode")
-  //-       img(:src="item.url")
-  //-     .info
-  //-       .name(:title="item.name") {{item.name}}
-  //-     .opt
-  //-       span.del() 删除
-  //-       span.gps(@click="openFile(item.path)") 定位文件
   .tableBox
     Collapse.collapse(v-if="fileList.length" v-model="activeCollapse")
       Panel.item(v-for="item in fileList" :hide-arrow="true" :class="{hasErr: item.isDir}" :name="item.idName" :key="item.id")
         .title
           Icon.arrow(type="ios-arrow-forward")
           ButtonGroup.btnGroup(size="small")
-            Button(ghost)
+            Button(ghost @click.stop="qrcode(item.url)")
               BaseIcon.qrcode(type="icon-erweima")
               | 生成二维码
             Button(ghost icon="md-link" @click.stop="copy(item.url)") 复制链接
             Button(ghost icon="md-folder-open" @click.stop="openFile(item.path)") 定位文件
-            Button(ghost icon="md-trash" @click.stop="del(item)") 删除
         .content(slot="content")
           Tag.tag(color="red") {{item.isDir ? '文件夹' : '文件'}}名称：{{item.name}}
           Tag.tag(color="orange" v-if="!item.isDir") 文件大小：{{item.size}}
           Tag.tag(color="blue") 修改时间：{{item.lastModified}}
           Tag.tag(color="cyan") 路径：{{item.path}}
+  .infoBox(v-if="ip.length")
+    .label
+      | IP地址：
+    .selectBox
+      Select.ipSelect(v-model="selectIp")
+        Option(v-for="item in ip" :label="`${item.address} (${item.name})`" :key="item.address" :value="item.address")
+    Icon.refresh(type="md-refresh" @click="refreshIp")
   .upload
     .uploadBox
       .dropBox(ref="dropBox" :class="{hover:isHover}" @click="activeDrop" @drop="dropStart" @dragenter="dragHover(true)" @dragleave="dragHover(false)")
         | 将文件拖到此处，或
         span 点击上传文件
         input.fileInput(type="file" ref="dropInput" @change="clickUploadFile" multiple="multiple")
-  //- .toTips(:class="{toShow:showTips}")
-    .closeBtn(@click="closeTip") 关闭
-    .contxt
-      i.fa.fa-times-circle
-      | {{tipsTxt}}
+  Modal.file_modal(
+    v-model="modalIsShow"
+    title="二维码"
+  )
+    Alert(type="warning" show-icon) 请确保设备处于相同的局域网内，同时请使用手机自带的扫码工具。微信、淘宝等第三方app扫码后无法下载文件。
+    img.code(:src="qrcodeSrc")
 </template>
 
 <script>
@@ -49,9 +47,8 @@ const fs = nodeRequire("fs-extra");
 const url = nodeRequire("url");
 const querystring = nodeRequire("querystring");
 const qrCode = nodeRequire("qrcode");
-const network = os.networkInterfaces();
 
-import { Icon, Collapse, Panel, Tag, ButtonGroup, Button, } from "iview";
+import { Icon, Collapse, Panel, Tag, ButtonGroup, Button, Modal, Alert, Select, Option, } from "iview";
 import BaseIcon from './components/BaseIcon.vue';
 import dateFormat from "cainfoharbor-utils/dateFormat";
 import filesize from "filesize";
@@ -64,10 +61,14 @@ export default {
     ButtonGroup,
     Button,
     BaseIcon,
+    Modal,
+    Alert,
+    Select,
+    Option,
   },
   data() {
     return {
-      ip: "",
+      ip: [],
       isHover: false,
       fileList: [],
       activeCollapse: [],
@@ -81,22 +82,19 @@ export default {
         {title: '大小', key: 'size'},
         {title: '修改日期', key: 'lastModified'},
       ],
+      modalIsShow: false,
+      qrcodeSrc: '',
+      selectIp: '',
     };
   },
 
   mounted() {
-    //获取内网地址
-    Object.keys(network).map(item => {
-      for (let i = 0, max = network[item].length; i < max; i++) {
-        if (/^(192)/.test(network[item][i].address)) {
-          this.ip = network[item][i].family == "IPv4" ? network[item][i].address : "127.0.0.1";
-        }
-      }
-    });
+    this.getIp();
 
     //访问服务后的业务逻辑
     this.server = net
       .createServer((req, res) => {
+        console.log(req);
         let queryId = req.url.replace("/", ""),
           idJson;
         for (let i = 0, max = this.fileList.length; i < max; i++) {
@@ -129,7 +127,7 @@ export default {
 
     //随机监听一个空闲端口
     this.server.listen(() => {
-      console.log(this.ip + ":" + this.server.address().port);
+      console.log('监听端口：' ,this.server.address().port);
     });
 
     document.ondragleave = e => {
@@ -147,6 +145,28 @@ export default {
   },
 
   methods: {
+    getIp() {
+      let ip = [];
+      const network = os.networkInterfaces();
+      //获取内网地址
+      Object.keys(network).map(item => {
+        for (let i = 0, max = network[item].length; i < max; i++) {
+          let address = network[item][i].address;
+          if (!/^(127)/.test(address) && /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.test(address) && network[item][i].family == "IPv4") {
+            ip.push({
+              address,
+              name: item,
+            });
+          }
+        }
+      });
+      this.ip = [...ip];
+      this.selectIp = ip[0].address;
+    },
+    refreshIp() {
+      this.getIp();
+      this.$Message.success('IP地址更新成功！');
+    },
     dropStart(e) {
       this.uploadFile(e, "drop");
     },
@@ -178,20 +198,6 @@ export default {
             //文件夹过滤
             if (!stats.isDirectory()) {
               files[item].isDir = false;
-              // //生成二维码
-              // qrCode.toDataURL(
-              //   `http://${this.ip}:${this.server.address().port}/${files[item].id}`,
-              //   {
-              //     errorCorrectionLevel: "M",
-              //     margin: 1,
-              //     scale: 4,
-              //     color: {
-              //       dark: "000000ff"
-              //     }
-              //   },
-              //   (err, url) => {
-              //   }
-              // );
             } else {
               files[item].isDir = true;
             }
@@ -204,7 +210,7 @@ export default {
               id: _item.id,
               idName: `item${_item.id}`,
               size: filesize(_item.size),
-              url: `http://${this.ip}:${this.server.address().port}/${files[item].id}`,
+              url: `:${this.server.address().port}/${files[item].id}`,
             };
           });
           this.activeCollapse = this.fileList.map(item => item.idName);
@@ -223,23 +229,28 @@ export default {
       }
     },
     copy(url){
-      clipboard.writeText(url);
+      clipboard.writeText(`http://${this.selectIp}${url}`);
       this.$Message.success('复制成功！');
     },
-    // totips(txt) {
-    //   clearTimeout(this.timer);
-    //   this.showTips = true;
-    //   this.tipsTxt = txt;
-    //   this.timer = setTimeout(() => {
-    //     this.closeTip();
-    //   }, 3000);
-    // },
-    // closeTip() {
-    //   this.showTips = false;
-    // },
+    qrcode(url) {
+      //生成二维码
+      qrCode.toDataURL(`http://${this.selectIp}${url}`, {
+        errorCorrectionLevel: "M",
+        margin: 1,
+        width: 200,
+      })
+      .then(src => {
+        this.qrcodeSrc = src;
+        this.modalIsShow = true;
+      })
+      .catch(err => {
+        this.$Message.error('二维码生成失败！');
+      })
+      ;
+    },
     activeDrop() {
       this.$refs.dropInput.click();
-    }
+    },
   }
 };
 </script>
@@ -312,6 +323,26 @@ export default {
       }
     }
   }
+  .infoBox{
+    height: 50px;
+    background: #595957;
+    z-index: 4;
+    display: flex;
+    flex: 0 1 50px;
+    padding: 0 10px;
+    align-items: center;
+    .label{
+      margin-right: 10px;
+    }
+    .selectBox{
+      flex: auto;
+    }
+    .refresh{
+      font-size: 22px;
+      margin-left: 10px;
+      cursor: pointer;
+    }
+  }
   .upload {
     height: 200px;
     background: $color-bg-base;
@@ -349,111 +380,14 @@ export default {
       }
     }
   }
-  // ul {
-  //   margin: 0;
-  //   padding: 0;
-  //   flex: auto;
-  //   overflow-y: auto;
-  //   padding-bottom: 20px;
-  //   display: flex;
-  //   flex-wrap: wrap;
-  //   li {
-  //     list-style-type: none;
-  //     margin: 20px 0 0 20px;
-  //     height: 260px;
-  //     width: 175px;
-  //     box-sizing: border-box;
-  //     background: $white;
-  //     display: flex;
-  //     flex-direction: column;
-  //     .imgBox {
-  //       width: 175px;
-  //       height: 175px;
-  //       margin: 0 auto;
-  //       box-sizing: border-box;
-  //       padding: 5px;
-  //       img {
-  //         width: 100%;
-  //         height: 100%;
-  //         display: block;
-  //       }
-  //     }
-  //     .opt {
-  //       text-align: center;
-  //       span {
-  //         font-size: 12px;
-  //         line-height: 16px;
-  //         height: 16px;
-  //         color: $white;
-  //         text-align: center;
-  //         display: inline-block;
-  //         margin: 0 7px;
-  //         padding: 2px;
-  //         width: 55px;
-  //         border-radius: 2px;
-  //         cursor: pointer;
-  //       }
-  //       .del {
-  //         background-color: #d9534f;
-  //       }
-  //       .gps {
-  //         background-color: #337ab7;
-  //       }
-  //     }
-  //     .info {
-  //       overflow: hidden;
-  //       .name {
-  //         margin: 0 10px 5px;
-  //         font-size: 18px;
-  //         line-height: 24px;
-  //         word-break: break-all;
-  //         height: 48px;
-  //         overflow: hidden;
-  //         cursor: default;
-  //         color: #333;
-  //       }
-  //     }
-  //   }
-  // }
-  // .toTips {
-  //   position: fixed;
-  //   font-size: $font-size-base;
-  //   left: 0;
-  //   right: 0;
-  //   bottom: 150px;
-  //   box-sizing: border-box;
-  //   color: $white;
-  //   height: 30px;
-  //   line-height: 30px;
-  //   z-index: 2;
-  //   overflow: hidden;
-  //   padding: 0 10px;
-  //   transition: all 0.5s;
-  //   background: #be1100;
-  //   &.toShow {
-  //     transition: all 0.5s;
-  //     bottom: 180px;
-  //   }
-  //   .contxt {
-  //     overflow: hidden;
-  //     i {
-  //       font-size: 16px;
-  //       vertical-align: middle;
-  //       margin-right: 8px;
-  //     }
-  //   }
-  //   .closeBtn {
-  //     float: right;
-  //     text-align: center;
-  //     padding: 0 15px;
-  //     border: 1px solid $white;
-  //     height: 20px;
-  //     line-height: 18px;
-  //     box-sizing: border-box;
-  //     font-size: 12px;
-  //     margin: 5px 0 5px 20px;
-  //     cursor: pointer;
-  //   }
-  // }
+}
+.file_modal{
+  .ivu-modal{
+    top: 40px;
+  }
+  .code{
+    display: block;
+    margin: 0 auto;
+  }
 }
 </style>

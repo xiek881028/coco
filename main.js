@@ -1,4 +1,4 @@
-const {app, BrowserWindow} = require('electron')
+const {app, BrowserWindow,} = require('electron')
 const path = require('path')
 const url = require('url')
 
@@ -9,9 +9,9 @@ let win;
 function createWindow () {
   // 创建浏览器窗口。
 	win = new BrowserWindow({
-		minWidth: 470,
-		minHeight: 490,
-		width: 630,
+		minWidth: 500,
+		minHeight: 500,
+		width: 560,
 		height: 660,
 		frame: false,
 		title: "coco",
@@ -25,7 +25,7 @@ function createWindow () {
 
 	// 加载应用的 index.html。
 	win.loadURL(url.format({
-		pathname: path.join(__dirname, 'dist/index.html'),
+		pathname: path.join(__dirname, 'app/index.html'),
 		protocol: 'file:',
 		slashes: true,
 	}));

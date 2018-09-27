@@ -31,7 +31,7 @@ const assets = {
 /* release时需要忽略的dist中的文件或文件夹 */
 const shellignore = ['assets', 'images'];
 
-const outPath = 'dist';
+const outPath = 'app';
 
 const today = dateFormat('yyyy-MM-dd', new Date());
 
