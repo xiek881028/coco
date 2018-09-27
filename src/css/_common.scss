@@ -18,3 +18,9 @@ body{
 	display: flex;
 	box-sizing: border-box;
 }
+
+.ivu-message{
+	.ivu-message-notice-content{
+		user-select: none;
+	}
+}

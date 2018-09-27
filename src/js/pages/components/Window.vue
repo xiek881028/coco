@@ -117,6 +117,7 @@ export default {
     justify-content: space-between;
     background: $primary-color;
     padding: 0 10px;
+    user-select: none;
     .btnBox {
       display: flex;
       align-items: center;

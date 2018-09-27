@@ -4,12 +4,14 @@
     Collapse.collapse(v-if="fileList.length" v-model="activeCollapse")
       Panel.item(v-for="item in fileList" :hide-arrow="true" :class="{hasErr: item.isDir}" :name="item.idName" :key="item.id")
         .title
-          Icon.arrow(type="ios-arrow-forward")
+          .arrowBox
+            Icon.arrow(type="ios-arrow-forward")
+            span(v-if="item.isDir") 不支持文件夹传输
           ButtonGroup.btnGroup(size="small")
-            Button(ghost @click.stop="qrcode(item.url)")
+            Button(ghost @click.stop="qrcode(item.url)" v-if="!item.isDir")
               BaseIcon.qrcode(type="icon-erweima")
               | 生成二维码
-            Button(ghost icon="md-link" @click.stop="copy(item.url)") 复制链接
+            Button(ghost icon="md-link" @click.stop="copy(item.url)" v-if="!item.isDir") 复制链接
             Button(ghost icon="md-folder-open" @click.stop="openFile(item.path)") 定位文件
         .content(slot="content")
           Tag.tag(color="red") {{item.isDir ? '文件夹' : '文件'}}名称：{{item.name}}
@@ -35,6 +37,8 @@
   )
     Alert(type="warning" show-icon) 请确保设备处于相同的局域网内，同时请使用手机自带的扫码工具。微信、淘宝等第三方app扫码后无法下载文件。
     img.code(:src="qrcodeSrc")
+    .footer(slot="footer")
+      Button(@click="closeModal") 关闭
 </template>
 
 <script>
@@ -251,6 +255,9 @@ export default {
     activeDrop() {
       this.$refs.dropInput.click();
     },
+    closeModal() {
+      this.modalIsShow = false;
+    },
   }
 };
 </script>
@@ -273,14 +280,12 @@ export default {
       border: none;
       .item{
         background-color: $primary-color;
-        &.hasErr{
-          background-color: $color-err;
-        }
         .title{
           display: flex;
           justify-content: space-between;
           align-items: center;
           height: 100%;
+          user-select: none;
           .btnGroup{
             margin-right: 16px;
             button{
@@ -297,16 +302,31 @@ export default {
               margin-right: 7px;
             }
           }
-          .arrow{
+          .arrowBox{
             color: $white;
-            font-size: 16px;
-            transition: transform .2s ease-in-out;
+            .arrow{
+              font-size: 16px;
+              transition: transform .2s ease-in-out;
+            }
+            span{
+              padding-left: 10px;
+            }
+          }
+        }
+        &.hasErr{
+          background-color: $color-err;
+          .title .btnGroup button{
+            &:hover{
+              background-color: mix($white, $color-err, 40%);
+            }
           }
         }
         &.ivu-collapse-item-active{
           .title{
-            .arrow{
-              transform: rotate(90deg);
+            .arrowBox{
+              .arrow{
+                transform: rotate(90deg);
+              }
             }
           }
         }
@@ -331,6 +351,7 @@ export default {
     flex: 0 1 50px;
     padding: 0 10px;
     align-items: center;
+    user-select: none;
     .label{
       margin-right: 10px;
     }
@@ -355,6 +376,7 @@ export default {
       display: flex;
       justify-content: center;
       align-items: center;
+      user-select: none;
       .dropBox {
         display: block;
         width: 80%;
@@ -382,6 +404,7 @@ export default {
   }
 }
 .file_modal{
+  user-select: none;
   .ivu-modal{
     top: 40px;
   }
