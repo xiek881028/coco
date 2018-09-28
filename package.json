@@ -19,13 +19,13 @@
       "target": [
         "7z"
       ],
-      "icon": "icons/icon.win.png"
+      "icon": "icons/icon.ico"
     },
     "mac": {
       "target": [
         "7z"
       ],
-      "icon": "icons/icon.mac.png"
+      "icon": "icons/icon.ico"
     }
   },
   "scripts": {
